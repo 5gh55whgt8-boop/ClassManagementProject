@@ -1,0 +1,73 @@
+const API_BASE_URL = "https://classmanagementproject-sy06.onrender.com";
+
+window.onload = function () {
+    const studentId = new URLSearchParams(window.location.search).get("studentId");
+    if (!studentId) return;
+
+    fetch(`${API_BASE_URL}/get_student_data?studentId=${studentId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                renderChart(data.data || []);
+                renderTable(data.data || []);
+                renderStats(data.data || []);
+            } else {
+                alert(data.error || "Failed to load dashboard data");
+            }
+        })
+        .catch(err => {
+            console.error("Dashboard load error:", err);
+            alert("Error loading dashboard");
+        });
+};
+
+function renderStats(marks) {
+    const totalSubjects = marks.length;
+    const percentages = marks.map(m => ((parseFloat(m.mean || 0) / 25) * 100));
+    const avg = percentages.length ? (percentages.reduce((a, b) => a + b, 0) / percentages.length).toFixed(2) : "0.00";
+    const max = percentages.length ? Math.max(...percentages).toFixed(2) : "0.00";
+
+    document.getElementById("totalSubjects").textContent = totalSubjects;
+    document.getElementById("averageScore").textContent = `${avg}%`;
+    document.getElementById("highestScore").textContent = `${max}%`;
+}
+
+function renderChart(marks) {
+    const container = document.querySelector('.bar-chart');
+    container.innerHTML = "";
+
+    if (!marks.length) {
+        container.innerHTML = "<p>No data available</p>";
+        return;
+    }
+
+    marks.forEach(m => {
+        const percentage = ((parseFloat(m.mean || 0) / 25) * 100).toFixed(2);
+        container.innerHTML += `
+            <div class="bar" style="height: ${percentage}%;" title="${m.Subject_Name}">
+                <span class="bar-label">${m.Subject_Name.substring(0, 3)}</span>
+                <span class="bar-value">${percentage}%</span>
+            </div>`;
+    });
+}
+
+function renderTable(marks) {
+    const body = document.querySelector('.student-list tbody');
+    body.innerHTML = "";
+
+    if (!marks.length) {
+        body.innerHTML = `<tr><td colspan="5">No data available</td></tr>`;
+        return;
+    }
+
+    marks.forEach(m => {
+        body.innerHTML += `
+            <tr>
+                <td>${m.Subject_Name}</td>
+                <td>${m.lectures_attended}</td>
+                <td>${m.unit_test}</td>
+                <td>${m.oral_practical}</td>
+                <td>${m.mean}</td>
+            </tr>`;
+    });
+}

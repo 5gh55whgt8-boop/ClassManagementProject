@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard</title>
+    <link rel="stylesheet" href="Home.css">
+</head>
+<body>
+    <div id="header-placeholder"></div> 
+
+    <div class="container">
+        <main>
+            <section class="add-student">
+                <h2>Students List</h2>
+                <button id="addStudentBtn">+ Add Student</button>
+            </section>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Roll No.</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Marks</th>
+                        <th>Analysis</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="studentList"></tbody>
+            </table>
+        </main>
+    </div>
+
+    <div class="modal" id="studentModal">
+        <div class="modal-content">
+            <h2>Add Student</h2>
+            <input type="text" id="studentName" placeholder="Enter Student Name">
+            <input type="email" id="studentEmail" placeholder="Enter Student Email">
+            <input type="text" id="rollnumber" maxlength="4" placeholder="Enter Student Roll No.">
+
+            <div class="modal-buttons">
+                <button id="saveStudentBtn">Save</button>
+                <button id="closeModalBtn" type="button">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="Home.js"></script>
+</body>
+</html>

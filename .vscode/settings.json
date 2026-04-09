@@ -1,0 +1,6 @@
+{
+    "liveServer.settings.port": 5501,
+    // "liveServer.settings.root": "Class_management_Sys/sign-up-login-form/dist/"
+    "liveServer.settings.root": "sign-up-login-form/dist/"
+
+}

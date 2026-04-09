@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./sign-up-login-form/dist/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Student Portal Login</title>
+</head>
+<body>
+    <div class="main">
+        <input type="checkbox" id="chk-signup">
+        <input type="checkbox" id="chk-forgot">
+
+        <div class="login">
+            <form onsubmit="return loginUser(event)">
+                <label>Login</label>
+                <input type="email" placeholder="Email" id="login-email" required>
+                <div class="form-group" style="position: relative;">
+                    <input type="password" placeholder="Password" id="login-password" required>
+                    <i class="fas fa-eye toggle-eye" data-target="login-password" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;"></i>
+                </div>
+                <button type="submit">Login</button>
+                <div class="options">
+                    <label for="chk-forgot" class="forgotpass">Forgot Password?</label>
+                    <label for="chk-signup" class="signup-btn">Sign up</label>
+                </div>
+            </form>
+        </div>
+
+        <div class="signup">
+            <form onsubmit="return onSignUp(event)">
+                <label>Sign Up</label>
+                <input type="text" id="signup-username" placeholder="Full Name" required>
+                <input type="email" id="signup-email" placeholder="Email" required>
+                <input type="password" id="signup-password" placeholder="Password (Min 6 chars)" required>
+                <button type="submit">Create Account</button>
+                <div class="options">
+                    <label for="chk-signup" class="back-btn">Back to Login</label>
+                </div>
+            </form>
+        </div>
+
+        <div class="forgot-password">
+            <form onsubmit="return onResetPass(event)">
+                <label>Reset</label>
+                <input type="email" id="reset-email" placeholder="Email" required>
+                <input type="password" id="pass1" placeholder="New Password" required>
+                <input type="password" id="pass2" placeholder="Confirm Password" required>
+                <button type="submit">Update Password</button>
+                <div class="options">
+                    <label for="chk-forgot" class="back-btn">Back to Login</label>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="./sign-up-login-form/dist/login.js"></script>
+</body>
+</html>

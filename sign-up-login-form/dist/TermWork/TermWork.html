@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Marks Entry</title>
+    <link rel="stylesheet" href="TermWork.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="header-placeholder"></div> 
+
+    <div class="main-container" style="margin-top: 80px;">
+        <div class="form-container">
+            <h2><i class="fas fa-user-graduate"></i> Student Marks Entry</h2>
+            
+            <div class="form-group">
+                <label><i class="fas fa-book"></i> Select Subject:</label>
+                <select id="subject">
+                    <option value="OOP">Object Oriented Programming (OOP)</option>
+                    <option value="DSA">Data Structures & Algorithms (DSA)</option>
+                    <option value="MP">Microprocessor (MP)</option>
+                    <option value="SE">Software Engineering (SE)</option>
+                    <option value="M3">Mathematics 3 (M3)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-calendar-check"></i> Lectures Attended (Out of 5):</label>
+                <input type="number" id="lectures-attended" placeholder="0-5" min="0" max="5">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-tasks"></i> Unit Test (Out of 30):</label>
+                <input type="number" id="unit-test" placeholder="0-30" min="0" max="30">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-microscope"></i> Oral Practical (Out of 10):</label>
+                <input type="number" id="oral-practical" placeholder="0-10" min="0" max="10">
+            </div>
+
+            <div class="button-group">
+                <button class="btn submit-btn" onclick="addMarks()">
+                    <i class="fas fa-plus-circle"></i> Add Marks
+                </button>
+                <button class="btn view-results-btn" onclick="viewResults()">
+                    <i class="fas fa-chart-bar"></i> View Analysis
+                </button>
+            </div>
+
+            <div id="result" class="result-message"></div>
+        </div>
+    </div>
+
+    <script src="TermWork.js"></script>
+</body>
+</html>
