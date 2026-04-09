@@ -1,0 +1,22 @@
+{
+  "id": "/ClassManagementProject/",
+  "name": "Class Management System",
+  "short_name": "ClassManager",
+  "start_url": "/ClassManagementProject/index.html",
+  "scope": "/ClassManagementProject/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#573b8a",
+  "icons": [
+    {
+      "src": "/ClassManagementProject/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/ClassManagementProject/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
