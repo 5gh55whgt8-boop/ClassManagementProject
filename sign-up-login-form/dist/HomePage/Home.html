@@ -7,14 +7,15 @@
     <link rel="stylesheet" href="Home.css">
 </head>
 <body>
-    <div id="header-placeholder"></div> 
+    <div id="header-placeholder"></div>
 
     <div class="container">
         <main>
-            <section class="add-student">
+            <section class="add-student" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h2>Students List</h2>
                 <button id="addStudentBtn">+ Add Student</button>
             </section>
+
             <table>
                 <thead>
                     <tr>
@@ -24,6 +25,8 @@
                         <th>Email</th>
                         <th>Marks</th>
                         <th>Analysis</th>
+                        <th>Edit</th>
+                        <th>Reset Password</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -32,16 +35,47 @@
         </main>
     </div>
 
+    <!-- Add Student Modal -->
     <div class="modal" id="studentModal">
         <div class="modal-content">
             <h2>Add Student</h2>
             <input type="text" id="studentName" placeholder="Enter Student Name">
             <input type="email" id="studentEmail" placeholder="Enter Student Email">
-            <input type="text" id="rollnumber" maxlength="4" placeholder="Enter Student Roll No.">
+            <input type="text" id="rollnumber" placeholder="Enter Roll No.">
+            <input type="password" id="studentPassword" placeholder="Enter Default Password">
 
             <div class="modal-buttons">
                 <button id="saveStudentBtn">Save</button>
                 <button id="closeModalBtn" type="button">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div class="modal" id="editStudentModal">
+        <div class="modal-content">
+            <h2>Edit Student</h2>
+            <input type="text" id="editStudentName" placeholder="Student Name">
+            <input type="email" id="editStudentEmail" placeholder="Student Email">
+            <input type="text" id="editStudentRoll" placeholder="Roll No." readonly>
+
+            <div class="modal-buttons">
+                <button id="updateStudentBtn">Update</button>
+                <button id="closeEditModalBtn" type="button">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div class="modal" id="resetPasswordModal">
+        <div class="modal-content">
+            <h2>Reset Student Password</h2>
+            <input type="text" id="resetStudentRoll" placeholder="Roll No." readonly>
+            <input type="password" id="resetStudentPassword" placeholder="Enter New Password">
+
+            <div class="modal-buttons">
+                <button id="confirmResetPasswordBtn">Reset</button>
+                <button id="closeResetModalBtn" type="button">Close</button>
             </div>
         </div>
     </div>

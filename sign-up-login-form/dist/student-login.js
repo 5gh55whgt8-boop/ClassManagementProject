@@ -24,19 +24,11 @@ async function parseResponse(response) {
     }
 }
 
-function showServerUnavailableMessage(message) {
-    alert(message || "Server is temporarily unavailable. Please try again in a minute.");
-}
-
-function showNetworkErrorMessage() {
-    alert("Server not responding. Please try again later.");
-}
-
-async function loginUser(event) {
+async function studentLogin(event) {
     event.preventDefault();
 
-    const email = document.getElementById("login-email").value.trim();
-    const password = document.getElementById("login-password").value;
+    const email = document.getElementById("student-email").value.trim();
+    const password = document.getElementById("student-password").value;
 
     if (!email || !password) {
         alert("Please enter email and password.");
@@ -44,7 +36,7 @@ async function loginUser(event) {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/login`, {
+        const response = await fetch(`${API_BASE_URL}/student-login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
@@ -53,20 +45,19 @@ async function loginUser(event) {
         const result = await parseResponse(response);
 
         if (response.ok) {
-            alert(result.message || "Login successful");
-            window.location.href = "./sign-up-login-form/dist/HomePage/Home.html";
+            window.location.href = `./sign-up-login-form/dist/Dashboard/Dashboard.html?studentId=${result.rollNo}`;
             return false;
         }
 
         if (response.status === 503) {
-            showServerUnavailableMessage(result.message);
+            alert(result.message || "Server is temporarily unavailable. Please try again in a minute.");
             return false;
         }
 
         alert(result.message || "Invalid email or password");
     } catch (error) {
-        console.error("Teacher login error:", error);
-        showNetworkErrorMessage();
+        console.error("Student login error:", error);
+        alert("Server not responding. Please try again later.");
     }
 
     return false;

@@ -2,6 +2,7 @@ const API_BASE_URL = "https://classmanagementproject-sy06.onrender.com";
 
 document.addEventListener("DOMContentLoaded", () => {
     loadHeader();
+    attachLiveCalculation();
 });
 
 async function parseResponse(response) {
@@ -11,14 +12,6 @@ async function parseResponse(response) {
     } catch {
         return { message: text || "Unexpected server response" };
     }
-}
-
-function showServerUnavailableMessage(message) {
-    showResult(message || "Server is temporarily unavailable. Please try again in a minute.", "error");
-}
-
-function showNetworkErrorMessage() {
-    showResult("Server not responding. Please try again later.", "error");
 }
 
 function loadHeader() {
@@ -34,6 +27,40 @@ function showResult(message, type) {
     const result = document.getElementById("result");
     result.className = `result-message ${type}`;
     result.textContent = message;
+}
+
+function showServerUnavailableMessage(message) {
+    showResult(message || "Server is temporarily unavailable. Please try again in a minute.", "error");
+}
+
+function showNetworkErrorMessage() {
+    showResult("Server not responding. Please try again later.", "error");
+}
+
+function attachLiveCalculation() {
+    const fields = [
+        document.getElementById("lectures-attended"),
+        document.getElementById("unit-test"),
+        document.getElementById("oral-practical")
+    ];
+
+    fields.forEach(field => {
+        field.addEventListener("input", updateSummary);
+    });
+
+    updateSummary();
+}
+
+function updateSummary() {
+    const lectures = parseFloat(document.getElementById("lectures-attended").value) || 0;
+    const unitTest = parseFloat(document.getElementById("unit-test").value) || 0;
+    const oralPractical = parseFloat(document.getElementById("oral-practical").value) || 0;
+
+    const total = lectures + unitTest + oralPractical;
+    const scaledMean = ((total / 45) * 25).toFixed(2);
+
+    document.getElementById("total-obtained").textContent = `${total.toFixed(2)} / 45`;
+    document.getElementById("scaled-mean").textContent = `${scaledMean} / 25`;
 }
 
 async function addMarks() {
@@ -95,7 +122,13 @@ async function addMarks() {
         }
 
         showResult(data.message || "Marks Added Successfully!", "success");
-        setTimeout(() => window.location.reload(), 800);
+
+        setTimeout(() => {
+            document.getElementById("lectures-attended").value = "";
+            document.getElementById("unit-test").value = "";
+            document.getElementById("oral-practical").value = "";
+            updateSummary();
+        }, 500);
     } catch (err) {
         console.error("Add marks error:", err);
         showNetworkErrorMessage();

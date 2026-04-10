@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import mysql.connector
 from mysql.connector import Error
@@ -12,14 +12,15 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 DB_HOST = os.environ.get("DB_HOST")
 DB_USER = os.environ.get("DB_USER")
 DB_PASSWORD = os.environ.get("DB_PASSWORD")
-DB_PORT = int(os.environ.get("DB_PORT", "3306"))
 DB_NAME = os.environ.get("DB_NAME")
 
+try:
+    DB_PORT = int(os.environ.get("DB_PORT", 3306))
+except:
+    DB_PORT = 3306
+
+
 def get_db_connection(retries=2, delay=1):
-    """
-    Returns:
-        (db_connection, error_message)
-    """
     if not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
         return None, "Database configuration is incomplete"
 
@@ -44,17 +45,20 @@ def get_db_connection(retries=2, delay=1):
 
     return None, last_error or "Unknown database error"
 
+
 def db_unavailable_response():
     return jsonify({
         "status": "error",
         "message": "Server is temporarily unavailable. Please try again in a minute."
     }), 503
 
-@app.route('/')
+
+@app.route("/")
 def home():
     return jsonify({"status": "success", "message": "Backend is live"}), 200
 
-@app.route('/health')
+
+@app.route("/health")
 def health():
     db, err = get_db_connection(retries=0)
     if db:
@@ -72,19 +76,13 @@ def health():
         "message": "Database is unavailable"
     }), 200
 
-@app.route('/sign-up-login-form/dist/<path:path>')
-def serve_static_file(path):
-    return send_from_directory('sign-up-login-form/dist', path)
 
-@app.route('/sign-up-login-form')
-def serve_login():
-    return send_from_directory('sign-up-login-form/dist', 'index.html')
-
-@app.route('/login', methods=['POST'])
+# ---------------- TEACHER LOGIN ----------------
+@app.route("/login", methods=["POST"])
 def login():
     data = request.get_json(silent=True) or {}
-    email = data.get('email', '').strip()
-    password = data.get('password', '')
+    email = data.get("email", "").strip()
+    password = data.get("password", "")
 
     if not email or not password:
         return jsonify({
@@ -94,12 +92,15 @@ def login():
 
     db, db_error = get_db_connection()
     if not db:
-        print("Login DB connection failed:", db_error)
+        print("Teacher login DB connection failed:", db_error)
         return db_unavailable_response()
 
     cursor = db.cursor()
     try:
-        cursor.execute("SELECT username, password FROM teachers WHERE email=%s", (email,))
+        cursor.execute(
+            "SELECT id, username, password FROM teachers WHERE email=%s AND is_active=1",
+            (email,)
+        )
         user = cursor.fetchone()
 
         if not user:
@@ -108,42 +109,16 @@ def login():
                 "message": "Invalid email or password"
             }), 401
 
-        username, db_password = user
+        teacher_id, username, db_password = user
 
-        try:
-            if db_password and isinstance(db_password, str) and db_password.startswith("$2"):
-                if bcrypt.checkpw(password.encode('utf-8'), db_password.encode('utf-8')):
-                    return jsonify({
-                        "status": "success",
-                        "message": "Login successful",
-                        "user": username
-                    }), 200
+        if db_password and isinstance(db_password, str) and db_password.startswith("$2"):
+            if bcrypt.checkpw(password.encode("utf-8"), db_password.encode("utf-8")):
                 return jsonify({
-                    "status": "error",
-                    "message": "Invalid email or password"
-                }), 401
-        except Exception as e:
-            print("bcrypt login error:", e)
-
-        if password == db_password:
-            hashed_password = bcrypt.hashpw(
-                password.encode('utf-8'),
-                bcrypt.gensalt()
-            ).decode('utf-8')
-
-            update_cursor = db.cursor()
-            update_cursor.execute(
-                "UPDATE teachers SET password=%s WHERE email=%s",
-                (hashed_password, email)
-            )
-            db.commit()
-            update_cursor.close()
-
-            return jsonify({
-                "status": "success",
-                "message": "Login successful",
-                "user": username
-            }), 200
+                    "status": "success",
+                    "message": "Login successful",
+                    "teacherId": teacher_id,
+                    "user": username
+                }), 200
 
         return jsonify({
             "status": "error",
@@ -151,7 +126,7 @@ def login():
         }), 401
 
     except Exception as e:
-        print("Login route error:", e)
+        print("Teacher login error:", e)
         return jsonify({
             "status": "error",
             "message": "Server error during login"
@@ -160,224 +135,77 @@ def login():
         cursor.close()
         db.close()
 
-@app.route('/signup', methods=['POST'])
-def signup():
+
+# ---------------- STUDENT LOGIN ----------------
+@app.route("/student-login", methods=["POST"])
+def student_login():
     data = request.get_json(silent=True) or {}
-    username = data.get('username', '').strip()
-    email = data.get('email', '').strip()
-    password = data.get('password', '')
+    email = data.get("email", "").strip()
+    password = data.get("password", "")
 
-    if not username or not email or not password:
+    if not email or not password:
         return jsonify({
             "status": "error",
-            "message": "All fields are required"
-        }), 400
-
-    if len(password) < 6:
-        return jsonify({
-            "status": "error",
-            "message": "Password must be at least 6 characters"
+            "message": "Email and password are required"
         }), 400
 
     db, db_error = get_db_connection()
     if not db:
-        print("Signup DB connection failed:", db_error)
-        return db_unavailable_response()
-
-    cursor = db.cursor()
-    try:
-        cursor.execute("SELECT * FROM teachers WHERE email=%s", (email,))
-        if cursor.fetchone():
-            return jsonify({
-                "status": "error",
-                "message": "Email already exists"
-            }), 409
-
-        hashed_password = bcrypt.hashpw(
-            password.encode('utf-8'),
-            bcrypt.gensalt()
-        ).decode('utf-8')
-
-        cursor.execute(
-            "INSERT INTO teachers (username, email, password) VALUES (%s, %s, %s)",
-            (username, email, hashed_password)
-        )
-        db.commit()
-
-        return jsonify({
-            "status": "success",
-            "message": "Signup successful"
-        }), 200
-
-    except Exception as e:
-        print("Signup route error:", e)
-        return jsonify({
-            "status": "error",
-            "message": "Signup failed"
-        }), 500
-    finally:
-        cursor.close()
-        db.close()
-
-@app.route('/reset-password', methods=['POST'])
-def reset_password():
-    data = request.get_json(silent=True) or {}
-    email = data.get('email', '').strip()
-    new_password = data.get('new_password', '')
-
-    if not email or not new_password:
-        return jsonify({
-            "status": "error",
-            "message": "Email and new password are required"
-        }), 400
-
-    if len(new_password) < 6:
-        return jsonify({
-            "status": "error",
-            "message": "Password must be at least 6 characters"
-        }), 400
-
-    db, db_error = get_db_connection()
-    if not db:
-        print("Reset password DB connection failed:", db_error)
-        return db_unavailable_response()
-
-    cursor = db.cursor()
-    try:
-        cursor.execute("SELECT * FROM teachers WHERE email=%s", (email,))
-        if not cursor.fetchone():
-            return jsonify({
-                "status": "error",
-                "message": "Email not found"
-            }), 404
-
-        hashed_password = bcrypt.hashpw(
-            new_password.encode('utf-8'),
-            bcrypt.gensalt()
-        ).decode('utf-8')
-
-        cursor.execute(
-            "UPDATE teachers SET password=%s WHERE email=%s",
-            (hashed_password, email)
-        )
-        db.commit()
-
-        return jsonify({
-            "status": "success",
-            "message": "Password updated successfully"
-        }), 200
-
-    except Exception as e:
-        print("Reset password error:", e)
-        return jsonify({
-            "status": "error",
-            "message": "Password reset failed"
-        }), 500
-    finally:
-        cursor.close()
-        db.close()
-
-@app.route('/add_marks', methods=['POST'])
-def add_marks():
-    db = None
-    cursor = None
-    try:
-        data = request.get_json(silent=True) or {}
-
-        subject = data.get('subject')
-        lectures = float(data.get('lectures', 0))
-        unit_test = float(data.get('unitTest', 0))
-        oral_practical = float(data.get('oralPractical', 0))
-        roll_no = data.get('roll_no')
-        mean = round(float(data.get('mean', 0)), 2)
-
-        if not roll_no or not subject:
-            return jsonify({
-                "status": "error",
-                "message": "Missing required fields"
-            }), 400
-
-        db, db_error = get_db_connection()
-        if not db:
-            print("Add marks DB connection failed:", db_error)
-            return db_unavailable_response()
-
-        cursor = db.cursor()
-        query = """
-            INSERT INTO StudentReport
-            (Subject_Name, roll_no, lectures_attended, unit_test, oral_practical, mean)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (subject, roll_no, lectures, unit_test, oral_practical, mean))
-        db.commit()
-
-        return jsonify({
-            "status": "success",
-            "message": "Marks added successfully"
-        }), 200
-
-    except Exception as e:
-        print("Add marks error:", e)
-        return jsonify({
-            "status": "error",
-            "message": "Failed to add marks"
-        }), 500
-    finally:
-        if cursor:
-            cursor.close()
-        if db:
-            db.close()
-
-@app.route('/students', methods=['GET'])
-def get_students():
-    db, db_error = get_db_connection()
-    if not db:
-        print("Get students DB connection failed:", db_error)
+        print("Student login DB connection failed:", db_error)
         return db_unavailable_response()
 
     cursor = db.cursor(dictionary=True)
     try:
-        student_id = request.args.get("studentId")
-        req_type = request.args.get("type")
+        cursor.execute("""
+            SELECT Student_Name, email, password, RollNo
+            FROM students
+            WHERE email=%s AND IsActive=1
+        """, (email,))
+        student = cursor.fetchone()
 
-        if req_type == 'homepage':
-            cursor.execute("SELECT Student_Name, email, RollNo FROM students WHERE IsActive=1")
-            students_list = cursor.fetchall()
-        elif req_type == 'termwork' and student_id:
-            cursor.execute(
-                "SELECT Student_Name, email, RollNo FROM students WHERE RollNo=%s AND IsActive=1",
-                (student_id,)
-            )
-            students_list = cursor.fetchone()
-        else:
+        if not student:
             return jsonify({
                 "status": "error",
-                "message": "Invalid request"
-            }), 400
+                "message": "Invalid email or password"
+            }), 401
 
-        return jsonify({
-            "status": "success",
-            "students": students_list
-        }), 200
+        db_password = student["password"]
 
-    except Exception as e:
-        print("Get students error:", e)
+        if db_password and isinstance(db_password, str) and db_password.startswith("$2"):
+            if bcrypt.checkpw(password.encode("utf-8"), db_password.encode("utf-8")):
+                return jsonify({
+                    "status": "success",
+                    "message": "Login successful",
+                    "studentName": student["Student_Name"],
+                    "rollNo": student["RollNo"]
+                }), 200
+
         return jsonify({
             "status": "error",
-            "message": "Failed to fetch students"
+            "message": "Invalid email or password"
+        }), 401
+
+    except Exception as e:
+        print("Student login error:", e)
+        return jsonify({
+            "status": "error",
+            "message": "Server error during student login"
         }), 500
     finally:
         cursor.close()
         db.close()
 
-@app.route('/add-student', methods=['POST'])
+
+# ---------------- ADD STUDENT ----------------
+@app.route("/add-student", methods=["POST"])
 def add_student():
     data = request.get_json(silent=True) or {}
-    name = data.get('name', '').strip()
-    email = data.get('email', '').strip()
-    rollnumber = data.get('rollnumber', '').strip()
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip()
+    rollnumber = data.get("rollnumber", "").strip()
+    password = data.get("password", "").strip()
 
-    if not name or not email or not rollnumber:
+    if not name or not email or not rollnumber or not password:
         return jsonify({
             "status": "error",
             "message": "All fields are required"
@@ -400,10 +228,12 @@ def add_student():
                 "message": "Student already exists"
             }), 409
 
-        cursor.execute(
-            "INSERT INTO students (Student_Name, email, RollNo, IsActive) VALUES (%s, %s, %s, 1)",
-            (name, email, rollnumber)
-        )
+        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+        cursor.execute("""
+            INSERT INTO students (Student_Name, email, password, RollNo, IsActive)
+            VALUES (%s, %s, %s, %s, 1)
+        """, (name, email, hashed_password, rollnumber))
         db.commit()
 
         return jsonify({
@@ -421,10 +251,134 @@ def add_student():
         cursor.close()
         db.close()
 
-@app.route('/delete-student', methods=['POST'])
+
+# ---------------- UPDATE STUDENT ----------------
+@app.route("/update-student", methods=["POST"])
+def update_student():
+    data = request.get_json(silent=True) or {}
+    rollnumber = data.get("rollnumber", "").strip()
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip()
+
+    if not rollnumber or not name or not email:
+        return jsonify({
+            "status": "error",
+            "message": "All fields are required"
+        }), 400
+
+    db, db_error = get_db_connection()
+    if not db:
+        print("Update student DB connection failed:", db_error)
+        return db_unavailable_response()
+
+    cursor = db.cursor()
+    try:
+        cursor.execute("""
+            UPDATE students
+            SET Student_Name=%s, email=%s
+            WHERE RollNo=%s AND IsActive=1
+        """, (name, email, rollnumber))
+        db.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "Student updated successfully"
+        }), 200
+
+    except Exception as e:
+        print("Update student error:", e)
+        return jsonify({
+            "status": "error",
+            "message": "Failed to update student"
+        }), 500
+    finally:
+        cursor.close()
+        db.close()
+
+
+# ---------------- RESET STUDENT PASSWORD ----------------
+@app.route("/reset-student-password", methods=["POST"])
+def reset_student_password():
+    data = request.get_json(silent=True) or {}
+    rollnumber = data.get("rollnumber", "").strip()
+    new_password = data.get("new_password", "").strip()
+
+    if not rollnumber or not new_password:
+        return jsonify({
+            "status": "error",
+            "message": "Roll number and new password are required"
+        }), 400
+
+    db, db_error = get_db_connection()
+    if not db:
+        print("Reset student password DB connection failed:", db_error)
+        return db_unavailable_response()
+
+    cursor = db.cursor()
+    try:
+        hashed_password = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        cursor.execute("""
+            UPDATE students
+            SET password=%s
+            WHERE RollNo=%s AND IsActive=1
+        """, (hashed_password, rollnumber))
+        db.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "Student password reset successfully"
+        }), 200
+
+    except Exception as e:
+        print("Reset student password error:", e)
+        return jsonify({
+            "status": "error",
+            "message": "Failed to reset student password"
+        }), 500
+    finally:
+        cursor.close()
+        db.close()
+
+
+# ---------------- GET STUDENTS ----------------
+@app.route("/students", methods=["GET"])
+def get_students():
+    db, db_error = get_db_connection()
+    if not db:
+        print("Get students DB connection failed:", db_error)
+        return db_unavailable_response()
+
+    cursor = db.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT Student_Name, email, RollNo
+            FROM students
+            WHERE IsActive=1
+            ORDER BY RollNo
+        """)
+        students_list = cursor.fetchall()
+
+        return jsonify({
+            "status": "success",
+            "students": students_list
+        }), 200
+
+    except Exception as e:
+        print("Get students error:", e)
+        return jsonify({
+            "status": "error",
+            "message": "Failed to fetch students"
+        }), 500
+    finally:
+        cursor.close()
+        db.close()
+
+
+# ---------------- DELETE STUDENT ----------------
+@app.route("/delete-student", methods=["POST"])
 def delete_student():
     data = request.get_json(silent=True) or {}
-    rollnumber = data.get('rollnumber')
+    rollnumber = data.get("rollnumber", "").strip()
 
     if not rollnumber:
         return jsonify({
@@ -439,12 +393,14 @@ def delete_student():
 
     cursor = db.cursor()
     try:
-        cursor.execute("UPDATE students SET IsActive = 0 WHERE RollNo = %s", (rollnumber,))
+        cursor.execute("UPDATE students SET IsActive=0 WHERE RollNo=%s", (rollnumber,))
         db.commit()
+
         return jsonify({
             "status": "success",
-            "message": "Student marked as inactive"
+            "message": "Student marked inactive"
         }), 200
+
     except Exception as e:
         print("Delete student error:", e)
         return jsonify({
@@ -455,9 +411,58 @@ def delete_student():
         cursor.close()
         db.close()
 
-@app.route('/get_student_data', methods=['GET'])
+
+# ---------------- ADD MARKS ----------------
+@app.route("/add_marks", methods=["POST"])
+def add_marks():
+    data = request.get_json(silent=True) or {}
+    subject = data.get("subject")
+    lectures = float(data.get("lectures", 0))
+    unit_test = float(data.get("unitTest", 0))
+    oral_practical = float(data.get("oralPractical", 0))
+    roll_no = data.get("roll_no")
+    mean = round(float(data.get("mean", 0)), 2)
+
+    if not roll_no or not subject:
+        return jsonify({
+            "status": "error",
+            "message": "Missing required fields"
+        }), 400
+
+    db, db_error = get_db_connection()
+    if not db:
+        print("Add marks DB connection failed:", db_error)
+        return db_unavailable_response()
+
+    cursor = db.cursor()
+    try:
+        cursor.execute("""
+            INSERT INTO StudentReport
+            (Subject_Name, roll_no, lectures_attended, unit_test, oral_practical, mean)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (subject, roll_no, lectures, unit_test, oral_practical, mean))
+        db.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "Marks added successfully"
+        }), 200
+
+    except Exception as e:
+        print("Add marks error:", e)
+        return jsonify({
+            "status": "error",
+            "message": "Failed to add marks"
+        }), 500
+    finally:
+        cursor.close()
+        db.close()
+
+
+# ---------------- GET STUDENT DATA ----------------
+@app.route("/get_student_data", methods=["GET"])
 def get_student_data():
-    student_id = request.args.get('studentId')
+    student_id = request.args.get("studentId")
     if not student_id:
         return jsonify({
             "success": False,
@@ -475,8 +480,7 @@ def get_student_data():
     cursor = db.cursor(dictionary=True)
     try:
         cursor.execute("""
-            SELECT Subject_Name, roll_no, lectures_attended,
-                   unit_test, oral_practical, mean
+            SELECT Subject_Name, roll_no, lectures_attended, unit_test, oral_practical, mean
             FROM StudentReport
             WHERE roll_no = %s
         """, (student_id,))
@@ -486,6 +490,7 @@ def get_student_data():
             "success": True,
             "data": rows if rows else []
         }), 200
+
     except Exception as e:
         print("Get student data error:", e)
         return jsonify({
@@ -496,6 +501,7 @@ def get_student_data():
         cursor.close()
         db.close()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host="0.0.0.0", port=port)
