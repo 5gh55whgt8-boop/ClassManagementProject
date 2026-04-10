@@ -1,27 +1,33 @@
-body {
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+}
+
+body {
     min-height: 100vh;
-    font-family: 'Jost', sans-serif;
+    font-family: 'Poppins', 'Jost', sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
     background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    padding: 20px;
 }
 
 .main {
-    width: 380px;
+    width: 100%;
+    max-width: 420px;
     min-height: 430px;
-    position: relative;
     background: rgba(255, 255, 255, 0.97);
-    border-radius: 16px;
+    border-radius: 18px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
     overflow: hidden;
     text-align: center;
-    padding: 30px 0;
+    padding: 32px 0;
 }
 
-.teacher-login-box {
+.teacher-login-box,
+.main form {
     width: 100%;
     height: 100%;
     background: transparent;
@@ -42,8 +48,8 @@ input[type="password"],
 input[type="text"],
 input[type="number"],
 select {
-    width: 82%;
-    height: 46px;
+    width: 84%;
+    height: 48px;
     background: #ece9f5;
     margin: 12px auto;
     padding: 12px 14px;
@@ -51,7 +57,6 @@ select {
     outline: none;
     border-radius: 10px;
     font-size: 15px;
-    box-sizing: border-box;
     display: block;
     transition: all 0.25s ease;
 }
@@ -63,15 +68,14 @@ select:focus {
 }
 
 button {
-    width: 82%;
-    height: 46px;
+    width: 84%;
+    height: 48px;
     margin: 18px auto 10px auto;
     display: block;
     color: #fff;
     background: linear-gradient(90deg, #573b8a, #6d44b8);
     font-size: 1rem;
     font-weight: 700;
-    outline: none;
     border: none;
     border-radius: 10px;
     transition: 0.25s ease;
@@ -84,6 +88,17 @@ button:hover {
     background: linear-gradient(90deg, #4c2f7b, #5f39a8);
 }
 
+a {
+    color: #573b8a;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
 .options {
     display: flex;
     justify-content: center;
@@ -92,31 +107,26 @@ button:hover {
     flex-wrap: wrap;
 }
 
-.options a,
-.options label {
-    font-size: 14px;
-    cursor: pointer;
-    color: #573b8a;
-    font-weight: 600;
-    margin: 0;
-}
-
-.options a:hover {
-    text-decoration: underline;
-}
-
 .form-group {
     width: 100%;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+    body {
+        padding: 16px;
+        align-items: center;
+    }
+
     .main {
-        width: 92%;
-        min-height: 400px;
+        max-width: 100%;
+        min-height: auto;
+        border-radius: 16px;
+        padding: 28px 0;
     }
 
     label {
         font-size: 1.8rem;
+        margin-bottom: 18px;
     }
 
     input[type="email"],
@@ -125,6 +135,33 @@ button:hover {
     input[type="number"],
     select,
     button {
-        width: 88%;
+        width: 90%;
+        height: 46px;
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 12px;
+    }
+
+    .main {
+        border-radius: 14px;
+        padding: 24px 0;
+    }
+
+    label {
+        font-size: 1.6rem;
+    }
+
+    input[type="email"],
+    input[type="password"],
+    input[type="text"],
+    input[type="number"],
+    select,
+    button {
+        width: 92%;
+        font-size: 14px;
     }
 }

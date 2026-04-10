@@ -20,6 +20,7 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 22px;
+    gap: 16px;
 }
 
 .add-student h2 {
@@ -173,7 +174,7 @@ table button:hover {
 
 @media (max-width: 1100px) {
     .container {
-        padding: 110px 16px 24px;
+        padding: 120px 16px 24px;
     }
 
     .table-card {
@@ -189,10 +190,30 @@ table button:hover {
     .add-student {
         flex-direction: column;
         align-items: stretch;
-        gap: 12px;
+    }
+
+    .add-student h2 {
+        font-size: 20px;
     }
 
     .add-student button {
         width: 100%;
+    }
+
+    .modal {
+        padding: 14px;
+    }
+
+    .modal-content {
+        padding: 18px;
+        border-radius: 14px;
+    }
+
+    .modal-content h2 {
+        font-size: 20px;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
     }
 }
