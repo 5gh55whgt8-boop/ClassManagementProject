@@ -6,6 +6,23 @@ document.addEventListener("DOMContentLoaded", function () {
     setupModal();
 });
 
+async function parseResponse(response) {
+    const text = await response.text();
+    try {
+        return text ? JSON.parse(text) : {};
+    } catch {
+        return { message: text || "Unexpected server response" };
+    }
+}
+
+function showServerUnavailableMessage(message) {
+    alert(message || "Server is temporarily unavailable. Please try again in a minute.");
+}
+
+function showNetworkErrorMessage() {
+    alert("Server not responding. Please try again later.");
+}
+
 function loadHeader() {
     fetch("../Header/Header.html")
         .then(response => response.text())
@@ -46,38 +63,48 @@ function clearModalFields() {
     document.getElementById("rollnumber").value = "";
 }
 
-function loadStudents() {
-    fetch(`${API_BASE_URL}/students?type=homepage`)
-        .then(res => res.json())
-        .then(data => {
-            const list = document.getElementById("studentList");
-            list.innerHTML = "";
+async function loadStudents() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/students?type=homepage`);
+        const data = await parseResponse(response);
 
-            if (!data.students || !data.students.length) {
-                list.innerHTML = `<tr><td colspan="7">No students found</td></tr>`;
-                return;
-            }
+        const list = document.getElementById("studentList");
+        list.innerHTML = "";
 
-            data.students.forEach((student, index) => {
-                list.innerHTML += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${student.RollNo}</td>
-                        <td>${student.Student_Name}</td>
-                        <td>${student.email}</td>
-                        <td><button onclick="enterMarks('${student.RollNo}')">Enter Marks</button></td>
-                        <td><button onclick="viewAnalysis('${student.RollNo}')">View Analysis</button></td>
-                        <td><button class="delete-btn" onclick="deleteStudent('${student.RollNo}')">Delete</button></td>
-                    </tr>`;
-            });
-        })
-        .catch(err => {
-            console.error("Load students error:", err);
-            document.getElementById("studentList").innerHTML = `<tr><td colspan="7">Failed to load students</td></tr>`;
+        if (response.status === 503) {
+            list.innerHTML = `<tr><td colspan="7">Server temporarily unavailable</td></tr>`;
+            showServerUnavailableMessage(data.message);
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to load students");
+        }
+
+        if (!data.students || !data.students.length) {
+            list.innerHTML = `<tr><td colspan="7">No students found</td></tr>`;
+            return;
+        }
+
+        data.students.forEach((student, index) => {
+            list.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${student.RollNo}</td>
+                    <td>${student.Student_Name}</td>
+                    <td>${student.email}</td>
+                    <td><button onclick="enterMarks('${student.RollNo}')">Enter Marks</button></td>
+                    <td><button onclick="viewAnalysis('${student.RollNo}')">View Analysis</button></td>
+                    <td><button class="delete-btn" onclick="deleteStudent('${student.RollNo}')">Delete</button></td>
+                </tr>`;
         });
+    } catch (err) {
+        console.error("Load students error:", err);
+        document.getElementById("studentList").innerHTML = `<tr><td colspan="7">Failed to load students</td></tr>`;
+    }
 }
 
-function saveStudent() {
+async function saveStudent() {
     const name = document.getElementById("studentName").value.trim();
     const email = document.getElementById("studentEmail").value.trim();
     const rollnumber = document.getElementById("rollnumber").value.trim();
@@ -87,25 +114,36 @@ function saveStudent() {
         return;
     }
 
-    fetch(`${API_BASE_URL}/add-student`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, rollnumber })
-    })
-        .then(async res => {
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.message || "Failed to add student");
-            }
-            alert(data.message || "Student added successfully");
-            document.getElementById("studentModal").style.display = "none";
-            clearModalFields();
-            loadStudents();
-        })
-        .catch(err => {
-            console.error("Save student error:", err);
-            alert(err.message || "Failed to add student");
+    try {
+        const response = await fetch(`${API_BASE_URL}/add-student`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, rollnumber })
         });
+
+        const data = await parseResponse(response);
+
+        if (response.status === 503) {
+            showServerUnavailableMessage(data.message);
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to add student");
+        }
+
+        alert(data.message || "Student added successfully");
+        document.getElementById("studentModal").style.display = "none";
+        clearModalFields();
+        loadStudents();
+    } catch (err) {
+        console.error("Save student error:", err);
+        if (err.message === "Failed to fetch") {
+            showNetworkErrorMessage();
+            return;
+        }
+        alert(err.message || "Failed to add student");
+    }
 }
 
 function enterMarks(rollNo) {
@@ -116,21 +154,35 @@ function viewAnalysis(rollNo) {
     window.location.href = `../Dashboard/Dashboard.html?studentId=${rollNo}`;
 }
 
-function deleteStudent(roll) {
+async function deleteStudent(roll) {
     if (!confirm("Are you sure?")) return;
 
-    fetch(`${API_BASE_URL}/delete-student`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rollnumber: roll })
-    })
-        .then(async res => {
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Delete failed");
-            loadStudents();
-        })
-        .catch(err => {
-            console.error("Delete student error:", err);
-            alert(err.message || "Failed to delete student");
+    try {
+        const response = await fetch(`${API_BASE_URL}/delete-student`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ rollnumber: roll })
         });
+
+        const data = await parseResponse(response);
+
+        if (response.status === 503) {
+            showServerUnavailableMessage(data.message);
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(data.message || "Delete failed");
+        }
+
+        alert(data.message || "Student deleted successfully");
+        loadStudents();
+    } catch (err) {
+        console.error("Delete student error:", err);
+        if (err.message === "Failed to fetch") {
+            showNetworkErrorMessage();
+            return;
+        }
+        alert(err.message || "Failed to delete student");
+    }
 }

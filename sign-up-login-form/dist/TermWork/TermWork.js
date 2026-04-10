@@ -4,6 +4,23 @@ document.addEventListener("DOMContentLoaded", () => {
     loadHeader();
 });
 
+async function parseResponse(response) {
+    const text = await response.text();
+    try {
+        return text ? JSON.parse(text) : {};
+    } catch {
+        return { message: text || "Unexpected server response" };
+    }
+}
+
+function showServerUnavailableMessage(message) {
+    showResult(message || "Server is temporarily unavailable. Please try again in a minute.", "error");
+}
+
+function showNetworkErrorMessage() {
+    showResult("Server not responding. Please try again later.", "error");
+}
+
 function loadHeader() {
     fetch("../Header/Header.html")
         .then(response => response.text())
@@ -19,12 +36,12 @@ function showResult(message, type) {
     result.textContent = message;
 }
 
-function addMarks() {
+async function addMarks() {
     const studentId = new URLSearchParams(window.location.search).get("studentId");
-    const subject = document.getElementById('subject').value;
-    const lectures = parseFloat(document.getElementById('lectures-attended').value) || 0;
-    const unitTest = parseFloat(document.getElementById('unit-test').value) || 0;
-    const oralPractical = parseFloat(document.getElementById('oral-practical').value) || 0;
+    const subject = document.getElementById("subject").value;
+    const lectures = parseFloat(document.getElementById("lectures-attended").value) || 0;
+    const unitTest = parseFloat(document.getElementById("unit-test").value) || 0;
+    const oralPractical = parseFloat(document.getElementById("oral-practical").value) || 0;
 
     if (!studentId) {
         showResult("Student ID missing", "error");
@@ -58,24 +75,31 @@ function addMarks() {
         roll_no: studentId
     };
 
-    fetch(`${API_BASE_URL}/add_marks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(marksData)
-    })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                showResult("Marks Added Successfully!", "success");
-                setTimeout(() => window.location.reload(), 800);
-            } else {
-                showResult(data.message || "Failed to save marks", "error");
-            }
-        })
-        .catch(err => {
-            console.error("Add marks error:", err);
-            showResult("Error saving marks", "error");
+    try {
+        const response = await fetch(`${API_BASE_URL}/add_marks`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(marksData)
         });
+
+        const data = await parseResponse(response);
+
+        if (response.status === 503) {
+            showServerUnavailableMessage(data.message);
+            return;
+        }
+
+        if (!response.ok) {
+            showResult(data.message || "Failed to save marks", "error");
+            return;
+        }
+
+        showResult(data.message || "Marks Added Successfully!", "success");
+        setTimeout(() => window.location.reload(), 800);
+    } catch (err) {
+        console.error("Add marks error:", err);
+        showNetworkErrorMessage();
+    }
 }
 
 function viewResults() {
