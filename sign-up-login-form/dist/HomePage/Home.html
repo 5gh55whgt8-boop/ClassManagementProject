@@ -5,33 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Dashboard</title>
     <link rel="stylesheet" href="Home.css">
+    <link rel="stylesheet" href="../Header/Header.css">
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="header-placeholder"></div>
 
     <div class="container">
         <main>
-            <section class="add-student" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <section class="add-student-bar">
                 <h2>Students List</h2>
                 <button id="addStudentBtn">+ Add Student</button>
             </section>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Roll No.</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Marks</th>
-                        <th>Analysis</th>
-                        <th>Edit</th>
-                        <th>Reset Password</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="studentList"></tbody>
-            </table>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Roll No.</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Marks</th>
+                            <th>Analysis</th>
+                            <th>Edit</th>
+                            <th>Reset Password</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentList">
+                        <tr>
+                            <td colspan="9">Loading students...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </main>
     </div>
 
