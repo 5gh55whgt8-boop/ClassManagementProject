@@ -69,42 +69,49 @@ header h1 {
 
 .bar-chart {
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     align-items: flex-end;
-    min-height: 280px;
-    padding: 10px 10px 35px;
-    gap: 16px;
+    min-height: 320px;
+    height: 320px;
+    padding: 20px 20px 45px;
+    gap: 40px;
+    overflow-x: auto;
+}
+
+.bar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 110px;
+    height: 100%;
+    position: relative;
+}
+
+.bar-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2d3436;
+    margin-bottom: 10px;
 }
 
 .bar {
-    width: 72px;
+    width: 76px;
     background: linear-gradient(180deg, #6c5ce7, #573b8a);
-    border-radius: 10px 10px 0 0;
+    border-radius: 14px 14px 0 0;
     position: relative;
-    transition: 0.3s ease;
-    min-height: 12px;
+    transition: height 0.3s ease;
+    min-height: 16px;
     box-shadow: 0 10px 16px rgba(87, 59, 138, 0.18);
 }
 
 .bar-label {
-    position: absolute;
-    bottom: -28px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 13px;
-    font-weight: 600;
-    color: #573b8a;
-    white-space: nowrap;
-}
-
-.bar-value {
-    position: absolute;
-    top: -28px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 13px;
+    margin-top: 12px;
+    font-size: 14px;
     font-weight: 700;
-    color: #2d3436;
+    color: #573b8a;
+    text-align: center;
+    word-break: break-word;
 }
 
 table {
@@ -142,12 +149,8 @@ tbody tr:last-child td {
     }
 
     .bar-chart {
-        overflow-x: auto;
         justify-content: flex-start;
-    }
-
-    .bar {
-        min-width: 64px;
+        gap: 24px;
     }
 
     table {

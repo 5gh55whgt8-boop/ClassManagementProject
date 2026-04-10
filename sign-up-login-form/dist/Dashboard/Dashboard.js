@@ -97,11 +97,14 @@ function renderChart(marks) {
 
     marks.forEach(m => {
         const percentage = ((parseFloat(m.mean || 0) / 25) * 100).toFixed(2);
+
         container.innerHTML += `
-            <div class="bar" style="height: ${percentage}%;" title="${m.Subject_Name}">
-                <span class="bar-label">${m.Subject_Name.substring(0, 3)}</span>
-                <span class="bar-value">${percentage}%</span>
-            </div>`;
+            <div class="bar-wrapper">
+                <div class="bar-value">${percentage}%</div>
+                <div class="bar" style="height: ${Math.max(parseFloat(percentage) * 3, 16)}px;" title="${m.Subject_Name}"></div>
+                <div class="bar-label">${m.Subject_Name}</div>
+            </div>
+        `;
     });
 }
 
@@ -122,6 +125,7 @@ function renderTable(marks) {
                 <td>${m.unit_test}</td>
                 <td>${m.oral_practical}</td>
                 <td>${m.mean}</td>
-            </tr>`;
+            </tr>
+        `;
     });
 }
