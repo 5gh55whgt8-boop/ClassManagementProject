@@ -1,6 +1,8 @@
 const API_BASE_URL = "https://classmanagementproject-sy06.onrender.com";
 
 window.onload = async function () {
+    loadHeader();
+
     const studentId = new URLSearchParams(window.location.search).get("studentId");
     if (!studentId) return;
 
@@ -32,6 +34,16 @@ window.onload = async function () {
         renderEmptyState("Error loading dashboard");
     }
 };
+
+function loadHeader() {
+    fetch("../Header/Header.html")
+        .then(response => response.text())
+        .then(data => {
+            const header = document.getElementById("header-placeholder");
+            if (header) header.innerHTML = data;
+        })
+        .catch(err => console.error("Header Error:", err));
+}
 
 async function parseResponse(response) {
     const text = await response.text();

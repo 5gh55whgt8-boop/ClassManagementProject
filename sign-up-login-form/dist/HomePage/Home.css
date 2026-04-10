@@ -5,47 +5,48 @@
 }
 
 body {
-    font-family: 'Poppins', sans-serif;
     background: #f4f6fb;
+    font-family: 'Poppins', sans-serif;
     color: #2d3436;
 }
 
 .container {
-    padding: 120px 40px 40px 40px;
+    width: 100%;
+    padding: 110px 35px 35px;
 }
 
-.add-student-bar {
+.add-student {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 26px;
+    margin-bottom: 22px;
 }
 
-.add-student-bar h2 {
+.add-student h2 {
     color: #573b8a;
     font-size: 22px;
     font-weight: 700;
 }
 
-.add-student-bar button {
+.add-student button {
     background: #573b8a;
-    color: white;
+    color: #fff;
     padding: 12px 18px;
     border: none;
     border-radius: 10px;
     cursor: pointer;
     font-weight: 600;
-    box-shadow: 0 8px 16px rgba(87, 59, 138, 0.18);
-    transition: all 0.25s ease;
+    box-shadow: 0 8px 18px rgba(87, 59, 138, 0.18);
+    transition: 0.25s ease;
 }
 
-.add-student-bar button:hover {
+.add-student button:hover {
     background: #472f74;
     transform: translateY(-1px);
 }
 
-.table-wrapper {
-    background: white;
+.table-card {
+    background: #ffffff;
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
@@ -69,24 +70,24 @@ th {
 }
 
 td {
-    border-bottom: 1px solid #edf0f7;
+    border-bottom: 1px solid #eceff5;
     font-size: 14px;
-}
-
-tr:last-child td {
-    border-bottom: none;
 }
 
 tbody tr:hover {
     background: #faf8ff;
 }
 
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
 table button {
     background: #573b8a;
-    color: white;
-    padding: 8px 12px;
+    color: #fff;
+    padding: 9px 14px;
     border: none;
-    border-radius: 8px;
+    border-radius: 9px;
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -112,8 +113,8 @@ table button:hover {
     background: rgba(15, 12, 41, 0.45);
     justify-content: center;
     align-items: center;
-    z-index: 2000;
     padding: 20px;
+    z-index: 2000;
 }
 
 .modal-content {
@@ -127,8 +128,8 @@ table button:hover {
 }
 
 .modal-content h2 {
-    margin-bottom: 16px;
     color: #573b8a;
+    margin-bottom: 16px;
     font-size: 22px;
 }
 
@@ -136,7 +137,7 @@ table button:hover {
     width: 100%;
     padding: 12px 14px;
     margin: 10px 0;
-    border: 1px solid #d9dce5;
+    border: 1px solid #d7dbe6;
     border-radius: 10px;
     font-size: 14px;
     outline: none;
@@ -172,26 +173,26 @@ table button:hover {
 
 @media (max-width: 1100px) {
     .container {
-        padding: 120px 18px 30px 18px;
+        padding: 110px 16px 24px;
     }
 
-    .table-wrapper {
+    .table-card {
         overflow-x: auto;
     }
 
     table {
-        min-width: 1100px;
+        min-width: 1180px;
     }
 }
 
 @media (max-width: 640px) {
-    .add-student-bar {
+    .add-student {
         flex-direction: column;
         align-items: stretch;
         gap: 12px;
     }
 
-    .add-student-bar button {
+    .add-student button {
         width: 100%;
     }
 }

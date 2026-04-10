@@ -6,7 +6,7 @@
     <title>Teacher Dashboard</title>
     <link rel="stylesheet" href="Home.css">
     <link rel="stylesheet" href="../Header/Header.css">
-    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -14,12 +14,12 @@
 
     <div class="container">
         <main>
-            <section class="add-student-bar">
+            <section class="add-student">
                 <h2>Students List</h2>
                 <button id="addStudentBtn">+ Add Student</button>
             </section>
 
-            <div class="table-wrapper">
+            <div class="table-card">
                 <table>
                     <thead>
                         <tr>
@@ -44,13 +44,12 @@
         </main>
     </div>
 
-    <!-- Add Student Modal -->
     <div class="modal" id="studentModal">
         <div class="modal-content">
             <h2>Add Student</h2>
             <input type="text" id="studentName" placeholder="Enter Student Name">
             <input type="email" id="studentEmail" placeholder="Enter Student Email">
-            <input type="text" id="rollnumber" placeholder="Enter Roll No.">
+            <input type="text" id="rollnumber" placeholder="Enter Student Roll No.">
             <input type="password" id="studentPassword" placeholder="Enter Default Password">
 
             <div class="modal-buttons">
@@ -60,13 +59,12 @@
         </div>
     </div>
 
-    <!-- Edit Student Modal -->
     <div class="modal" id="editStudentModal">
         <div class="modal-content">
             <h2>Edit Student</h2>
             <input type="text" id="editStudentName" placeholder="Student Name">
             <input type="email" id="editStudentEmail" placeholder="Student Email">
-            <input type="text" id="editStudentRoll" placeholder="Roll No." readonly>
+            <input type="text" id="editStudentRoll" readonly>
 
             <div class="modal-buttons">
                 <button id="updateStudentBtn">Update</button>
@@ -75,11 +73,10 @@
         </div>
     </div>
 
-    <!-- Reset Password Modal -->
     <div class="modal" id="resetPasswordModal">
         <div class="modal-content">
             <h2>Reset Student Password</h2>
-            <input type="text" id="resetStudentRoll" placeholder="Roll No." readonly>
+            <input type="text" id="resetStudentRoll" readonly>
             <input type="password" id="resetStudentPassword" placeholder="Enter New Password">
 
             <div class="modal-buttons">
