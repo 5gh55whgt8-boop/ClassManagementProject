@@ -55,15 +55,15 @@ def db_unavailable_response():
 
 def verify_password_and_migrate_if_needed(plain_password, stored_password, db=None, table=None, email=None, rollno=None):
     """
-    Returns: (is_valid, message)
     Supports:
-    - bcrypt hashed passwords
-    - old plain text passwords (auto-migrates to bcrypt)
+    1. bcrypt hashed passwords
+    2. old plain text passwords (auto-migrate to bcrypt after first successful login)
+    Returns: (is_valid, verify_error)
     """
     if not stored_password:
         return False, "Stored password is empty"
 
-    # bcrypt hash path
+    # bcrypt password
     if isinstance(stored_password, str) and stored_password.startswith("$2"):
         try:
             is_valid = bcrypt.checkpw(
@@ -75,7 +75,7 @@ def verify_password_and_migrate_if_needed(plain_password, stored_password, db=No
             print("bcrypt verify error:", e)
             return False, "Stored password hash is invalid"
 
-    # fallback old plain text password support
+    # plain text fallback
     if plain_password == stored_password:
         try:
             if db and table:
@@ -152,14 +152,14 @@ def login():
 
     cursor = db.cursor()
     try:
-        # is_active column asel tar he query chaleil
-        # nasel tar except madhye fallback query ahe
+        # try with is_active first
         try:
             cursor.execute(
                 "SELECT id, username, password FROM teachers WHERE email=%s AND is_active=1",
                 (email,)
             )
         except Exception:
+            # fallback if is_active column doesn't exist
             cursor.execute(
                 "SELECT id, username, password FROM teachers WHERE email=%s",
                 (email,)
@@ -186,7 +186,7 @@ def login():
         if verify_error == "Stored password hash is invalid":
             return jsonify({
                 "status": "error",
-                "message": "Admin password in database is invalid. Please reset and insert a proper bcrypt hash."
+                "message": "Admin password in database is invalid. Please reset and insert a proper password."
             }), 500
 
         if is_valid:
