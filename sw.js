@@ -1,10 +1,12 @@
-const CACHE_NAME = "class-management-v2";
+const CACHE_NAME = "class-management-v3";
 
 const urlsToCache = [
   "/ClassManagementProject/",
   "/ClassManagementProject/index.html",
   "/ClassManagementProject/student-login.html",
   "/ClassManagementProject/manifest.webmanifest",
+  "/ClassManagementProject/icons/icon-192.png",
+  "/ClassManagementProject/icons/icon-512.png",
 
   "/ClassManagementProject/sign-up-login-form/dist/style.css",
   "/ClassManagementProject/sign-up-login-form/dist/login.js",
@@ -38,9 +40,7 @@ self.addEventListener("activate", event => {
     caches.keys().then(keys =>
       Promise.all(
         keys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
+          if (key !== CACHE_NAME) return caches.delete(key);
         })
       )
     )
@@ -49,38 +49,21 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
-  const requestUrl = new URL(event.request.url);
+  const url = new URL(event.request.url);
 
-  // API requests should always go to network
-  if (requestUrl.origin.includes("onrender.com")) {
-    event.respondWith(
-      fetch(event.request).catch(() =>
-        new Response(
-          JSON.stringify({
-            status: "error",
-            message: "Network unavailable"
-          }),
-          {
-            headers: { "Content-Type": "application/json" }
-          }
-        )
-      )
-    );
+  if (url.origin.includes("onrender.com")) {
+    event.respondWith(fetch(event.request));
     return;
   }
 
-  // Static assets: cache first, then network
   event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      return (
-        cachedResponse ||
-        fetch(event.request).then(networkResponse => {
-          return caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, networkResponse.clone());
-            return networkResponse;
-          });
-        })
-      );
+    caches.match(event.request).then(cached => {
+      return cached || fetch(event.request).then(networkResponse => {
+        return caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+        });
+      });
     })
   );
 });
