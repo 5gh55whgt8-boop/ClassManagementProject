@@ -1,12 +1,12 @@
 {
-  "id": "/ClassManagementProject/",
-  "name": "Class Management System",
-  "short_name": "ClassManager",
+  "name": "Class Management Portal",
+  "short_name": "ClassPortal",
   "start_url": "/ClassManagementProject/index.html",
   "scope": "/ClassManagementProject/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#f4f6fb",
   "theme_color": "#573b8a",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/ClassManagementProject/icons/icon-192.png",
