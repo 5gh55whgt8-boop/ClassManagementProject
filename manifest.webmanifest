@@ -1,20 +1,22 @@
 {
   "name": "Class Management Portal",
   "short_name": "ClassPortal",
+  "id": "/ClassManagementProject/",
   "start_url": "/ClassManagementProject/index.html",
   "scope": "/ClassManagementProject/",
   "display": "standalone",
   "background_color": "#f4f6fb",
   "theme_color": "#573b8a",
   "orientation": "portrait",
+  "description": "Manage student marks and performance easily",
   "icons": [
     {
-      "src": "/ClassManagementProject/icons/icon-192.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/ClassManagementProject/icons/icon-512.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
