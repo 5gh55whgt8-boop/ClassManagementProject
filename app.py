@@ -16,7 +16,7 @@ DB_NAME = os.environ.get("DB_NAME")
 
 try:
     DB_PORT = int(os.environ.get("DB_PORT", 3306))
-except:
+except Exception:
     DB_PORT = 3306
 
 
@@ -51,6 +51,61 @@ def db_unavailable_response():
         "status": "error",
         "message": "Server is temporarily unavailable. Please try again in a minute."
     }), 503
+
+
+def verify_password_and_migrate_if_needed(plain_password, stored_password, db=None, table=None, email=None, rollno=None):
+    """
+    Returns: (is_valid, message)
+    Supports:
+    - bcrypt hashed passwords
+    - old plain text passwords (auto-migrates to bcrypt)
+    """
+    if not stored_password:
+        return False, "Stored password is empty"
+
+    # bcrypt hash path
+    if isinstance(stored_password, str) and stored_password.startswith("$2"):
+        try:
+            is_valid = bcrypt.checkpw(
+                plain_password.encode("utf-8"),
+                stored_password.encode("utf-8")
+            )
+            return is_valid, None
+        except Exception as e:
+            print("bcrypt verify error:", e)
+            return False, "Stored password hash is invalid"
+
+    # fallback old plain text password support
+    if plain_password == stored_password:
+        try:
+            if db and table:
+                hashed_password = bcrypt.hashpw(
+                    plain_password.encode("utf-8"),
+                    bcrypt.gensalt()
+                ).decode("utf-8")
+
+                update_cursor = db.cursor()
+
+                if table == "teachers" and email:
+                    update_cursor.execute(
+                        "UPDATE teachers SET password=%s WHERE email=%s",
+                        (hashed_password, email)
+                    )
+                elif table == "students" and rollno:
+                    update_cursor.execute(
+                        "UPDATE students SET password=%s WHERE RollNo=%s",
+                        (hashed_password, rollno)
+                    )
+
+                db.commit()
+                update_cursor.close()
+
+            return True, None
+        except Exception as e:
+            print("password migration error:", e)
+            return True, None
+
+    return False, None
 
 
 @app.route("/")
@@ -97,10 +152,19 @@ def login():
 
     cursor = db.cursor()
     try:
-        cursor.execute(
-            "SELECT id, username, password FROM teachers WHERE email=%s AND is_active=1",
-            (email,)
-        )
+        # is_active column asel tar he query chaleil
+        # nasel tar except madhye fallback query ahe
+        try:
+            cursor.execute(
+                "SELECT id, username, password FROM teachers WHERE email=%s AND is_active=1",
+                (email,)
+            )
+        except Exception:
+            cursor.execute(
+                "SELECT id, username, password FROM teachers WHERE email=%s",
+                (email,)
+            )
+
         user = cursor.fetchone()
 
         if not user:
@@ -111,14 +175,27 @@ def login():
 
         teacher_id, username, db_password = user
 
-        if db_password and isinstance(db_password, str) and db_password.startswith("$2"):
-            if bcrypt.checkpw(password.encode("utf-8"), db_password.encode("utf-8")):
-                return jsonify({
-                    "status": "success",
-                    "message": "Login successful",
-                    "teacherId": teacher_id,
-                    "user": username
-                }), 200
+        is_valid, verify_error = verify_password_and_migrate_if_needed(
+            plain_password=password,
+            stored_password=db_password,
+            db=db,
+            table="teachers",
+            email=email
+        )
+
+        if verify_error == "Stored password hash is invalid":
+            return jsonify({
+                "status": "error",
+                "message": "Admin password in database is invalid. Please reset and insert a proper bcrypt hash."
+            }), 500
+
+        if is_valid:
+            return jsonify({
+                "status": "success",
+                "message": "Login successful",
+                "teacherId": teacher_id,
+                "user": username
+            }), 200
 
         return jsonify({
             "status": "error",
@@ -169,16 +246,27 @@ def student_login():
                 "message": "Invalid email or password"
             }), 401
 
-        db_password = student["password"]
+        is_valid, verify_error = verify_password_and_migrate_if_needed(
+            plain_password=password,
+            stored_password=student["password"],
+            db=db,
+            table="students",
+            rollno=student["RollNo"]
+        )
 
-        if db_password and isinstance(db_password, str) and db_password.startswith("$2"):
-            if bcrypt.checkpw(password.encode("utf-8"), db_password.encode("utf-8")):
-                return jsonify({
-                    "status": "success",
-                    "message": "Login successful",
-                    "studentName": student["Student_Name"],
-                    "rollNo": student["RollNo"]
-                }), 200
+        if verify_error == "Stored password hash is invalid":
+            return jsonify({
+                "status": "error",
+                "message": "Student password in database is invalid. Please ask teacher to reset it."
+            }), 500
+
+        if is_valid:
+            return jsonify({
+                "status": "success",
+                "message": "Login successful",
+                "studentName": student["Student_Name"],
+                "rollNo": student["RollNo"]
+            }), 200
 
         return jsonify({
             "status": "error",
@@ -307,6 +395,12 @@ def reset_student_password():
         return jsonify({
             "status": "error",
             "message": "Roll number and new password are required"
+        }), 400
+
+    if len(new_password) < 6:
+        return jsonify({
+            "status": "error",
+            "message": "Password must be at least 6 characters"
         }), 400
 
     db, db_error = get_db_connection()
