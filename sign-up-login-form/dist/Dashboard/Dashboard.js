@@ -7,7 +7,6 @@ window.onload = async function () {
     const sessionStudentId = sessionStorage.getItem("studentId");
     const queryStudentId = new URLSearchParams(window.location.search).get("studentId");
 
-    // student should only view own dashboard
     if (role === "student" && sessionStudentId && queryStudentId !== sessionStudentId) {
         window.location.href = `../Dashboard/Dashboard.html?studentId=${sessionStudentId}`;
         return;
@@ -35,22 +34,27 @@ window.onload = async function () {
             renderTable(data.data || []);
             renderStats(data.data || []);
         } else {
-            alert(data.error || "Failed to load dashboard data");
             renderEmptyState("Failed to load data");
         }
     } catch (err) {
         console.error("Dashboard load error:", err);
-        alert("Server not responding. Please try again later.");
         renderEmptyState("Error loading dashboard");
     }
 };
 
 function loadHeaderBasedOnRole() {
     const role = sessionStorage.getItem("userRole");
-    const headerFile = role === "student" ? "../Header/StudentHeader.html" : "../Header/Header.html";
+    const headerFile = role === "student"
+        ? "../Header/StudentHeader.html"
+        : "../Header/Header.html";
 
     fetch(headerFile)
-        .then(response => response.text())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Header file not found: ${headerFile}`);
+            }
+            return response.text();
+        })
         .then(data => {
             const header = document.getElementById("header-placeholder");
             if (header) {
@@ -65,7 +69,11 @@ function loadHeaderBasedOnRole() {
                 }
             }
         })
-        .catch(err => console.error("Header Error:", err));
+        .catch(err => {
+            console.error("Header Error:", err);
+            const header = document.getElementById("header-placeholder");
+            if (header) header.innerHTML = "";
+        });
 }
 
 async function parseResponse(response) {
