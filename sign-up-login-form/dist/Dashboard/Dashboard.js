@@ -1,9 +1,19 @@
 const API_BASE_URL = "https://classmanagementproject-sy06.onrender.com";
 
 window.onload = async function () {
-    loadHeader();
+    loadHeaderBasedOnRole();
 
-    const studentId = new URLSearchParams(window.location.search).get("studentId");
+    const role = sessionStorage.getItem("userRole");
+    const sessionStudentId = sessionStorage.getItem("studentId");
+    const queryStudentId = new URLSearchParams(window.location.search).get("studentId");
+
+    // student should only view own dashboard
+    if (role === "student" && sessionStudentId && queryStudentId !== sessionStudentId) {
+        window.location.href = `../Dashboard/Dashboard.html?studentId=${sessionStudentId}`;
+        return;
+    }
+
+    const studentId = queryStudentId || sessionStudentId;
     if (!studentId) return;
 
     try {
@@ -35,12 +45,25 @@ window.onload = async function () {
     }
 };
 
-function loadHeader() {
-    fetch("../Header/Header.html")
+function loadHeaderBasedOnRole() {
+    const role = sessionStorage.getItem("userRole");
+    const headerFile = role === "student" ? "../Header/StudentHeader.html" : "../Header/Header.html";
+
+    fetch(headerFile)
         .then(response => response.text())
         .then(data => {
             const header = document.getElementById("header-placeholder");
-            if (header) header.innerHTML = data;
+            if (header) {
+                header.innerHTML = data;
+            }
+
+            if (role === "student") {
+                const studentId = sessionStorage.getItem("studentId") || new URLSearchParams(window.location.search).get("studentId");
+                const dashboardLink = document.getElementById("studentDashboardLink");
+                if (dashboardLink && studentId) {
+                    dashboardLink.href = `../Dashboard/Dashboard.html?studentId=${studentId}`;
+                }
+            }
         })
         .catch(err => console.error("Header Error:", err));
 }
@@ -97,11 +120,12 @@ function renderChart(marks) {
 
     marks.forEach(m => {
         const percentage = ((parseFloat(m.mean || 0) / 25) * 100).toFixed(2);
+        const barHeight = Math.max((parseFloat(percentage) / 100) * 220, 24);
 
         container.innerHTML += `
             <div class="bar-wrapper">
                 <div class="bar-value">${percentage}%</div>
-                <div class="bar" style="height: ${Math.max(parseFloat(percentage) * 3, 16)}px;" title="${m.Subject_Name}"></div>
+                <div class="bar" style="height: ${barHeight}px;" title="${m.Subject_Name}"></div>
                 <div class="bar-label">${m.Subject_Name}</div>
             </div>
         `;

@@ -1,12 +1,21 @@
 const API_BASE_URL = "https://classmanagementproject-sy06.onrender.com";
 
 document.addEventListener("DOMContentLoaded", function () {
+    guardTeacherPage();
     loadStudents();
     loadHeader();
     setupAddStudentModal();
     setupEditStudentModal();
     setupResetPasswordModal();
 });
+
+function guardTeacherPage() {
+    const role = sessionStorage.getItem("userRole");
+    if (role !== "teacher") {
+        alert("Access denied. Teacher login required.");
+        window.location.href = "../../../index.html";
+    }
+}
 
 async function parseResponse(response) {
     const text = await response.text();
@@ -199,10 +208,6 @@ async function saveStudent() {
         loadStudents();
     } catch (err) {
         console.error("Save student error:", err);
-        if (err.message === "Failed to fetch") {
-            showNetworkErrorMessage();
-            return;
-        }
         alert(err.message || "Failed to add student");
     }
 }
@@ -248,10 +253,6 @@ async function updateStudent() {
         loadStudents();
     } catch (err) {
         console.error("Update student error:", err);
-        if (err.message === "Failed to fetch") {
-            showNetworkErrorMessage();
-            return;
-        }
         alert(err.message || "Failed to update student");
     }
 }
@@ -299,10 +300,6 @@ async function resetStudentPassword() {
         clearResetPasswordFields();
     } catch (err) {
         console.error("Reset student password error:", err);
-        if (err.message === "Failed to fetch") {
-            showNetworkErrorMessage();
-            return;
-        }
         alert(err.message || "Failed to reset password");
     }
 }
@@ -340,10 +337,6 @@ async function deleteStudent(roll) {
         loadStudents();
     } catch (err) {
         console.error("Delete student error:", err);
-        if (err.message === "Failed to fetch") {
-            showNetworkErrorMessage();
-            return;
-        }
         alert(err.message || "Failed to delete student");
     }
 }

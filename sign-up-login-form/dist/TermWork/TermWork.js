@@ -1,9 +1,18 @@
 const API_BASE_URL = "https://classmanagementproject-sy06.onrender.com";
 
 document.addEventListener("DOMContentLoaded", () => {
+    guardTeacherPage();
     loadHeader();
     attachLiveCalculation();
 });
+
+function guardTeacherPage() {
+    const role = sessionStorage.getItem("userRole");
+    if (role !== "teacher") {
+        alert("Access denied. Teacher login required.");
+        window.location.href = "../../../index.html";
+    }
+}
 
 async function parseResponse(response) {
     const text = await response.text();

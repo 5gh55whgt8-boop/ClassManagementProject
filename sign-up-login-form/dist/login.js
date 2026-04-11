@@ -1,17 +1,6 @@
 const API_BASE_URL = "https://classmanagementproject-sy06.onrender.com";
 
 document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll(".toggle-eye").forEach(icon => {
-        icon.addEventListener("click", function () {
-            const input = document.getElementById(this.dataset.target);
-            if (!input) return;
-
-            const isPassword = input.getAttribute("type") === "password";
-            input.setAttribute("type", isPassword ? "text" : "password");
-            this.classList.toggle("fa-eye-slash");
-        });
-    });
-
     fetch(`${API_BASE_URL}/health`).catch(() => {});
 });
 
@@ -53,7 +42,9 @@ async function loginUser(event) {
         const result = await parseResponse(response);
 
         if (response.ok) {
-            alert(result.message || "Login successful");
+            sessionStorage.setItem("userRole", "teacher");
+            sessionStorage.removeItem("studentId");
+            sessionStorage.removeItem("studentName");
             window.location.href = "./sign-up-login-form/dist/HomePage/Home.html";
             return false;
         }
