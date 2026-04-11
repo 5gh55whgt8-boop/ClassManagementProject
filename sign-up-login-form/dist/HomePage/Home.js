@@ -11,9 +11,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function guardTeacherPage() {
     const role = sessionStorage.getItem("userRole");
+    const studentId = sessionStorage.getItem("studentId");
+
     if (role !== "teacher") {
+        if (role === "student" && studentId) {
+            alert("Students cannot access teacher dashboard.");
+            window.location.replace(`../Dashboard/Dashboard.html?studentId=${studentId}`);
+            return;
+        }
+
         alert("Access denied. Teacher login required.");
-        window.location.href = "../../../index.html";
+        window.location.replace("../../../index.html");
     }
 }
 
@@ -28,10 +36,6 @@ async function parseResponse(response) {
 
 function showServerUnavailableMessage(message) {
     alert(message || "Server is temporarily unavailable. Please try again in a minute.");
-}
-
-function showNetworkErrorMessage() {
-    alert("Server not responding. Please try again later.");
 }
 
 function loadHeader() {
